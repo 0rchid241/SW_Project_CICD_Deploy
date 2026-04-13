@@ -1,0 +1,17 @@
+community-backend
+community-frontend
+.idea
+.env
+
+# Local environment and generated sensitive files
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+**/kafka-data/
+**/logs/
+*.log
+*.log.*
