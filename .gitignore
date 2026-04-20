@@ -2,6 +2,7 @@ community-backend
 community-frontend
 .idea
 .env
+.env.runtime
 
 # Local environment and generated sensitive files
 .env.*
