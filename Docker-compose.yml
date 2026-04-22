@@ -77,7 +77,7 @@ services:
         condition: service_healthy # db가 'healthy' 상태가 될 때까지 기다림
 
     volumes:
-      - ./scripts:/app/scripts
+      - ./ops:/app/ops
 
 
   frontend-blue:
@@ -118,7 +118,7 @@ services:
         condition: service_healthy
 
     volumes:
-      - ./scripts:/app/scripts
+      - ./ops:/app/ops
 
 
   frontend-green:

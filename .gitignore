@@ -3,6 +3,7 @@ community-frontend
 .idea
 .env
 .env.runtime
+ops/*
 
 # Local environment and generated sensitive files
 .env.*
