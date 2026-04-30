@@ -4,6 +4,7 @@ community-frontend
 .env
 .env.runtime
 ops/*
+logs
 
 # Local environment and generated sensitive files
 .env.*
