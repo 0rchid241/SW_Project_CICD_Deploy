@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
+DEPLOY_ROOT="${DEPLOY_ROOT:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}"
+
 set -e
 
-BASE_DIR="/mnt/c/DH_cloud_backend/SW-project/SW-project-deploy"
+BASE_DIR="${DEPLOY_ROOT}"
 REQUEST_FILE="$BASE_DIR/ops/deploy-request.txt"
 DEPLOY_SCRIPT="$BASE_DIR/scripts/deploy.sh"
 LOG_FILE="$BASE_DIR/ops/watch-deploy.log"
