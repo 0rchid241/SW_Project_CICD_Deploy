@@ -22,7 +22,7 @@ services:
       start_period: 30s
 
     volumes:
-      - db_data:/var/lib/mysql # 컨테이너가 삭제되어도 데이터가 유지되도록 볼륨 설정
+      - db-data:/var/lib/mysql # 컨테이너가 삭제되어도 데이터가 유지되도록 볼륨 설정
 
     networks:
       global-network:
@@ -98,7 +98,7 @@ services:
 
 # 볼륨
 volumes:
-  db_data:
+  db-data:
   uptime-kuma-data:
   grafana-data:
   loki-data:
