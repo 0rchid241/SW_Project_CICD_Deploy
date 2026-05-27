@@ -5,11 +5,11 @@ DEPLOY_ROOT="${DEPLOY_ROOT:-$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)}"
 set -e
 
 BASE_DIR="${DEPLOY_ROOT}"
-REQUEST_FILE="$BASE_DIR/ops/deploy-request.txt"
+REQUEST_FILE="$BASE_DIR/service-server/ops/deploy-request.txt"
 DEPLOY_SCRIPT="$BASE_DIR/scripts/switching.sh"
-LOG_FILE="$BASE_DIR/ops/watch-deploy.log"
+LOG_FILE="$BASE_DIR/service-server/ops/watch-deploy.log"
 
-mkdir -p "$BASE_DIR/ops"
+mkdir -p "$BASE_DIR/service-server/ops"
 # 타임스탬프 변경 또는 빈 파일 생성 명령어
 touch "$LOG_FILE"
 
