@@ -16,6 +16,7 @@ fi
 DIR_PATH="${DEPLOY_ROOT}/${TARGET}-server"
 
 
+
 # 테스트 서버 분기
 if [ "$TARGET" = "test" ]; then
     echo ">>> ${TARGET}서버 가동 시작합니다."
