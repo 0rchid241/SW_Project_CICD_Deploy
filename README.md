@@ -1,66 +1,90 @@
-# 커뮤니티 웹 서비스 — CI/CD 및 배포 환경
+# 서경인사이드 커뮤니티 — CI/CD 및 배포 환경
 
-> SW 전문인재양성 팀 프로젝트의 **배포·운영 설정 저장소**입니다. 웹 서비스 전체가 아닌, GitLab CI/CD 설정 및 Docker 기반 실행·배포 스크립트를 담고 있습니다.
+**SW 전문인재양성 팀 프로젝트 | GitLab CI/CD · Docker · Nginx · Bash**
 
-## 프로젝트 소개
+Spring Boot 기반 백엔드와 React 기반 프론트엔드를 컨테이너 이미지로 빌드하고, 테스트·서비스 환경에 배포하기 위한 구성입니다. 이 저장소는 웹 애플리케이션 자체가 아니라 **빌드 파이프라인, Docker Compose, 배포 스크립트, 프록시 설정**을 담고 있습니다.
 
-팀에서 개발한 커뮤니티 웹 서비스의 **Backend(Spring Boot)**와 **Frontend(React)**를 Docker 이미지로 빌드하고 배포하기 위한 환경을 구성했습니다. 본 저장소에는 테스트/서비스 환경용 Docker Compose 설정, GitLab CI 설정 파일, Nginx 라우팅 및 배포 관리 스크립트가 포함되어 있습니다.
+## 프로젝트 개요
 
-- Backend 코드: [SW_Project_CICD_Backend](https://github.com/0rchid241/SW_Project_CICD_Backend)
-- Frontend 코드: [SW_Project_CICD_Frontend](https://github.com/0rchid241/SW_Project_CICD_Frontend)
-- Deploy 설정(현재 저장소): [SW_Project_CICD_Deploy](https://github.com/0rchid241/SW_Project_CICD_Deploy)
+커뮤니티 웹 서비스를 여러 구성 요소로 개발하면서 빌드와 배포 과정의 일관성을 확보하는 것을 목표로 했습니다.
 
-> 이 저장소는 원래 팀의 GitLab 프로젝트를 GitHub로 이전한 자료입니다. GitHub 저장소 소유와 **개별 코드 작성자**는 구분해야 합니다.
+- **CI:** GitLab CI에서 Docker 이미지를 빌드하고 Container Registry에 업로드
+- **테스트 환경:** 빌드한 이미지와 Docker Compose를 이용해 백엔드·프론트엔드 컨테이너 실행
+- **서비스 환경:** Blue/Green 컨테이너와 Nginx 라우팅 전환 스크립트 구성
+- **관측:** 컨테이너별 CPU·메모리 사용률 등을 기록하는 스크립트 구성
 
-## 시스템 구성 (저장소의 설정 파일 기준)
+### 기술 구성
+
+| 영역 | 기술 및 역할 |
+| --- | --- |
+| CI/CD | GitLab CI, GitLab Runner, Container Registry |
+| 빌드·실행 | Docker, Docker-in-Docker, Docker Compose |
+| 배포·라우팅 | Bash, Nginx, Blue/Green 전환 스크립트 |
+| 연동 서비스 | Spring Boot, React, MySQL, Redis |
+
+### 저장소 구성
+
+| 저장소 | 역할 |
+| --- | --- |
+| [Backend](https://github.com/0rchid241/SW_Project_CICD_Backend) | Spring Boot 애플리케이션 코드와 CI 연결 설정 |
+| [Frontend](https://github.com/0rchid241/SW_Project_CICD_Frontend) | React 애플리케이션 코드 |
+| **[Deploy](https://github.com/0rchid241/SW_Project_CICD_Deploy)** | CI 설정, 테스트·서비스 환경 구성, 배포 스크립트 |
+
+## 빌드 및 배포 흐름
 
 ```text
-GitLab CI
-  ├─ backend-ci.yml  ─ Docker 이미지 빌드 → Registry push
-  └─ frontend-ci.yml ─ Docker 이미지 빌드 → Registry push
+Backend / Frontend 소스
+          │
+          ▼
+      GitLab CI
+          │ Docker 이미지 빌드 및 업로드
+          ▼
+ GitLab Container Registry
+          │
+          ▼
+  Docker Compose 배포
+          │
+          ├── 테스트 환경: 최신 이미지 Pull 후 컨테이너 실행
+          │
+          └── 서비스 환경: Blue / Green 컨테이너 구성
                                   │
-                                  ▼
-                         Docker Compose
-                         ├─ 테스트 환경
-                         └─ 서비스 환경
-                             ├─ Blue/Green 컨테이너
-                             └─ Nginx 라우팅 전환
+                                  └── 별도 전환 스크립트
+                                       헬스체크 → Nginx 라우팅 변경
 ```
 
-- [backend-ci.yml](backend-ci.yml), [frontend-ci.yml](frontend-ci.yml): Docker-in-Docker를 이용한 이미지 빌드 및 Registry 업로드 설정
-- [scripts/deploy.sh](scripts/deploy.sh): 테스트/서비스 환경별 컨테이너 실행
-- [scripts/switching.sh](scripts/switching.sh): 대체 Blue/Green 컨테이너 기동, 백엔드 헬스체크, Nginx 라우팅 변경 등의 절차
-- [test-server/](test-server/), [service-server/](service-server/): 환경별 Docker Compose 및 인프라 설정
+위 다이어그램은 **저장소에 구현된 구성 요소의 역할**을 나타냅니다. Blue/Green 전환이 모든 GitLab CI 실행에서 자동 수행된다는 뜻은 아닙니다.
 
-위 내용은 **저장소 코드에 구현된 흐름**을 설명한 것으로, 현시점 운영 상태 또는 모든 환경에서의 성공적인 배포를 보증하지 않습니다.
+주요 설정 파일은 다음과 같습니다.
 
-## 나의 기여 — Git 기록에서 확인된 부분
+- [`backend-ci.yml`](backend-ci.yml) / [`frontend-ci.yml`](frontend-ci.yml): Docker 이미지 빌드와 Registry push
+- [`deploy-compose.yml`](deploy-compose.yml): 배포에 사용할 이미지 지정 및 테스트 환경 배포 단계
+- [`scripts/deploy.sh`](scripts/deploy.sh): 테스트·서비스 환경별 컨테이너 기동
+- [`scripts/switching.sh`](scripts/switching.sh): Blue/Green 컨테이너 기동, 백엔드 헬스체크, Nginx 라우팅 전환
+- [`scripts/monitor-docker-stats.sh`](scripts/monitor-docker-stats.sh): 컨테이너 자원 사용량 기록
+- [`test-server/`](test-server/) / [`service-server/`](service-server/): 환경별 Compose·Nginx 구성
 
-아래 항목은 Git 작성자 `orchid`로 남아 있는 변경 파일 및 커밋을 근거로 정리했습니다.
+## 개인 담당 작업
 
-| 영역 | 직접 변경한 내용 | 근거 |
-| --- | --- | --- |
-| CI 기반 환경 확인 | GitLab Runner/Docker 연결 테스트를 위한 CI 설정 추가·수정 | [커밋](https://github.com/0rchid241/SW_Project_CICD_Backend/commit/32faf66c35fb78462eba3b0a98c5560db14cf6d8) |
-| 이미지 빌드·배포 파이프라인 | 백엔드 Docker 이미지 빌드와 Container Registry push를 위한 CI 설정 작성·수정 | [커밋](https://github.com/0rchid241/SW_Project_CICD_Backend/commit/30d998bfd49a5cccb3cc4b849f37625f9c128c3a) |
-| 빌드 문제 대응 | Gradle 실행 권한 문제에 대응하기 위한 Dockerfile 변경, CI 설정 보완 | [커밋](https://github.com/0rchid241/SW_Project_CICD_Backend/commit/b4d05f073e52309abfe157216b79ff3bcb242c27) |
-| 공통 배포 CI 연결 | 배포 저장소의 `backend-ci.yml` 수정 | 커밋 |
-| 모니터링 | Docker 컨테이너 CPU 사용량 점검 스크립트 추가 | 커밋 |
-| 환경변수·연결 설정 | 서비스 Redis 접속 주소 및 테스트 Hikari 설정 수정 | Redis 커밋 · Hikari 커밋 |
+팀이 함께 개발한 프로젝트 중, 아래는 **작성자 `orchid`의 Git 커밋으로 직접 변경을 확인할 수 있는 작업**입니다.
 
-커밋 작성자 기록만으로 공동 작업의 정확한 기여 비율을 확정할 수는 없으므로, 위에는 **직접 변경이 확인된 작업**만 기재했습니다.
+### 1. GitLab CI와 Docker 이미지 빌드 설정
 
-## 팀 전체 구현과 개인 기여의 구분
+- GitLab Runner에서 Docker 명령을 실행할 수 있도록 CI 설정을 작성·시험했습니다. [Runner 테스트 커밋](https://github.com/0rchid241/SW_Project_CICD_Backend/commit/32faf66c35fb78462eba3b0a98c5560db14cf6d8)
+- 백엔드 빌드 작업에 Container Registry 로그인, 이미지 태그 지정, `docker build`, `docker push` 단계를 추가했습니다. [Registry 업로드 설정 커밋](https://github.com/0rchid241/SW_Project_CICD_Backend/commit/30d998bfd49a5cccb3cc4b849f37625f9c128c3a)
+- 공통 `backend-ci.yml`에서 Docker-in-Docker 서비스 선언 구조를 수정했습니다. 공통 CI 설정 커밋
 
-Blue/Green 트래픽 스위칭, 헬스체크, Nginx 재설정 등은 이 저장소에 구현되어 있으나, 일부 주요 스크립트 변경은 **다른 팀원 계정**으로 기록되어 있습니다. 해당 기능은 팀 프로젝트의 구현 내용으로 소개하되, 개인이 전부 작성했다고 표기하지 않습니다.
+### 2. 빌드 환경 문제 대응
 
-또한 JWT·소셜 로그인·게시판 API와 관련된 개인 기여는 현재 확인한 GitHub 이력만으로 확정되지 않았습니다. 원본 GitLab 브랜치/커밋 또는 다른 증빙을 확인한 뒤 기재하겠습니다.
+- CI Runner 태그를 `arm64`에서 `amd64`로 변경해 빌드 실행 환경 설정을 조정했습니다. [설정 변경 커밋](https://github.com/0rchid241/SW_Project_CICD_Backend/commit/19d8b15c7c2ec8da561a89a3a4b46b4b75d7e751)
+- Docker 이미지 빌드 중 Gradle Wrapper 실행 권한을 다루기 위해 Dockerfile에 `chmod +x gradlew`를 추가했습니다. [Dockerfile 수정 커밋](https://github.com/0rchid241/SW_Project_CICD_Backend/commit/b4d05f073e52309abfe157216b79ff3bcb242c27)
 
-## 포트폴리오 보완 예정 사항
+### 3. 컨테이너 모니터링 및 실행 환경 설정
 
-- [ ] GitLab 원본 기록의 개인별 기여 범위 및 이력 검증
-- [ ] 교육 기간·팀 구성·실습 범위 확인
-- [ ] 실제 CI 파이프라인 성공 화면 또는 데모 증빙(가능한 경우)
-- [ ] 기술 선택 이유, 배포 오류와 해결 과정 구체화
-- [ ] 필요한 경우 재현 가능한 로컬 실행 안내 및 비밀정보 점검
+- `docker stats` 출력을 주기적으로 수집해 컨테이너별 CPU·메모리 사용률과 프로세스 수(PIDs)를 CSV로 기록하는 스크립트를 추가했습니다. 모니터링 스크립트 커밋
+- Docker 환경에서 서비스 간 접속을 위해 Redis 호스트를 컨테이너 서비스 이름으로 지정하고, 테스트 환경의 Hikari 연결 풀 설정을 추가했습니다. Redis 설정 커밋 · Hikari 설정 커밋
 
-> **참고:** 이 README는 취업 포트폴리오를 위한 기록 정리 초안입니다. 외부에 공개하면 안 되는 키, 비밀번호, 내부 서버 주소 등은 추가하지 않습니다.
+## 팀 프로젝트 구현 범위
+
+팀 전체 작업으로는 테스트·서비스 환경 분리, Docker Compose를 이용한 인프라 연결, Blue/Green 컨테이너 전환 및 Nginx 라우팅, 백엔드 헬스체크 로직 등이 포함됩니다. **개인 담당 작업과 팀 전체 구현은 구분해 기술했습니다.**
+
+이 프로젝트는 교육 과정에서 만든 팀 프로젝트이며, 공개된 설정 및 커밋을 기준으로 구현 내용을 소개합니다. 실제 운영 환경의 가동률이나 무중단 배포 성과를 별도로 측정했다고 주장하지 않습니다.
